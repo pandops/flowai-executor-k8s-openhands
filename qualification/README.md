@@ -8,6 +8,6 @@ their consumer lists from the baseline Gitea selector.
 `baseline-chart/` and `baseline-values-k3d.yaml` are static copies of the
 Kubernetes packaging inputs at FlowAI
 `9cf0d0c5f0769b286119be8f12ff6e4edd1d8d0b`. The deployment repository owns
-live releases and Helmfile values. Run `bash qualification/render.sh` to
-lint and render both inputs with `render-values.yaml`. The synthetic broker
+live releases and Helmfile values. The qualification workflow lints and renders
+both inputs with `render-values.yaml`. The synthetic broker
 value is for rendering only and cannot authenticate an Executor.
