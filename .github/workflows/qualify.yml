@@ -127,4 +127,8 @@ jobs:
           docker build --platform linux/amd64 -f Containerfile --iidfile "$RUNNER_TEMP/executor-k8s.iid" .
           image="$(cat "$RUNNER_TEMP/executor-k8s.iid")"
           docker image inspect --format '{{ .Id }} {{ .Config.User }} {{ json .Config.Entrypoint }} {{ json .Config.Cmd }}' "$image"
-          docker run --rm --network none "$image" --help
+          help_status=0
+          docker run --rm --network none "$image" --help > "$RUNNER_TEMP/executor-k8s-help.txt" 2>&1 || help_status=$?
+          cat "$RUNNER_TEMP/executor-k8s-help.txt"
+          [[ "$help_status" == 2 ]]
+          grep -Fq 'Usage of executor_k8s_openhands:' "$RUNNER_TEMP/executor-k8s-help.txt"

@@ -1,0 +1,813 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://flowai.local/schemas/executor/executor-event.schema.json",
+  "title": "Executor event",
+  "description": "Every message a concrete Executor publishes on executor.event.<executor_id>.<kind>.pub (stream ALL_EVENT). Flat envelope (agents.md rule 10/15): kind equals the subject's <kind> token; task kinds carry task_id, attempt and claim_seq. No event_id (journal assigns it). Headers: team (the Executor's team_id, ignored by receivers), Nats-Msg-Id executor-<team_id>-<executor_id>-<publisher_seq>. Carries no claim token, JWT, LiteLLM key, secret or launch-parameter value.",
+  "type": "object",
+  "properties": {
+    "publisher": {
+      "const": "executor"
+    },
+    "publisher_seq": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9223372036854775807
+    },
+    "team_id": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9223372036854775807
+    },
+    "executor_id": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9223372036854775807
+    },
+    "kind": {
+      "enum": [
+        "created",
+        "pending",
+        "released",
+        "running",
+        "finished",
+        "failed",
+        "cancelled",
+        "control_acknowledged",
+        "control_failed",
+        "log",
+        "executor_started",
+        "executor_stopping",
+        "executor_stopped",
+        "executor_failed",
+        "executor_connection_lost",
+        "executor_connection_restored",
+        "protocol_violation"
+      ]
+    },
+    "occurred_at": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}Z$"
+    },
+    "task_id": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9223372036854775807
+    },
+    "attempt": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9223372036854775807
+    },
+    "claim_seq": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9223372036854775807
+    },
+    "reason": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{0,127}$"
+    },
+    "image_source": {
+      "enum": ["flow_default", "team_default"]
+    },
+    "failure_reason": {
+      "type": "string",
+      "description": "Machine-readable failure reason. executor_k8s_openhands publishes: image_missing, invalid_flow_revision, missing_required_parameter, llm_configuration_incomplete (retryable false); image_pull_failed, pod_restarted_before_finish, pod_failed (task Pod in phase Failed, or exited without an OpenHands finished), agent_server_failed (OpenHands agent server unreachable or its stream failed), llm_budget_exceeded, openhands_<status> for failed, error, stuck or paused (retryable true).",
+      "pattern": "^[a-z][a-z0-9_]{0,127}$"
+    },
+    "retryable": {
+      "type": "boolean"
+    },
+    "openhands_error_code": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "control_id": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9223372036854775807
+    },
+    "control": {
+      "const": "cancel"
+    },
+    "stream": {
+      "enum": ["reasoning", "work"]
+    },
+    "text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 65536
+    },
+    "executor_type": {
+      "const": "executor_k8s_openhands"
+    },
+    "phase": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{0,127}$"
+    },
+    "lost_at": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}Z$"
+    },
+    "restored_at": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}Z$"
+    },
+    "subject": {
+      "type": "string",
+      "maxLength": 512
+    },
+    "message_publisher": {
+      "type": "string",
+      "maxLength": 128
+    },
+    "message_publisher_seq": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9223372036854775807
+    }
+  },
+  "required": [
+    "publisher",
+    "publisher_seq",
+    "team_id",
+    "executor_id",
+    "kind",
+    "occurred_at"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "created"
+          }
+        },
+        "required": ["kind"]
+      },
+      "then": {
+        "properties": {
+          "publisher": true,
+          "publisher_seq": true,
+          "team_id": true,
+          "executor_id": true,
+          "kind": true,
+          "occurred_at": true,
+          "task_id": true,
+          "attempt": true,
+          "claim_seq": true
+        },
+        "required": [
+          "publisher",
+          "publisher_seq",
+          "team_id",
+          "executor_id",
+          "kind",
+          "occurred_at",
+          "task_id",
+          "attempt",
+          "claim_seq"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "pending"
+          }
+        },
+        "required": ["kind"]
+      },
+      "then": {
+        "properties": {
+          "publisher": true,
+          "publisher_seq": true,
+          "team_id": true,
+          "executor_id": true,
+          "kind": true,
+          "occurred_at": true,
+          "task_id": true,
+          "attempt": true,
+          "claim_seq": true,
+          "reason": {
+            "enum": [
+              "no_active_model",
+              "all_selected_models_paused",
+              "budget_exhausted",
+              "spend_observation_unavailable",
+              "dependency_unavailable"
+            ]
+          }
+        },
+        "required": [
+          "publisher",
+          "publisher_seq",
+          "team_id",
+          "executor_id",
+          "kind",
+          "occurred_at",
+          "task_id",
+          "attempt",
+          "claim_seq",
+          "reason"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "released"
+          }
+        },
+        "required": ["kind"]
+      },
+      "then": {
+        "properties": {
+          "publisher": true,
+          "publisher_seq": true,
+          "team_id": true,
+          "executor_id": true,
+          "kind": true,
+          "occurred_at": true,
+          "task_id": true,
+          "attempt": true,
+          "claim_seq": true,
+          "reason": {
+            "enum": [
+              "pending_timeout",
+              "executor_restarted",
+              "executor_shutdown"
+            ]
+          }
+        },
+        "required": [
+          "publisher",
+          "publisher_seq",
+          "team_id",
+          "executor_id",
+          "kind",
+          "occurred_at",
+          "task_id",
+          "attempt",
+          "claim_seq",
+          "reason"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "running"
+          }
+        },
+        "required": ["kind"]
+      },
+      "then": {
+        "properties": {
+          "publisher": true,
+          "publisher_seq": true,
+          "team_id": true,
+          "executor_id": true,
+          "kind": true,
+          "occurred_at": true,
+          "task_id": true,
+          "attempt": true,
+          "claim_seq": true,
+          "image_source": {
+            "enum": ["flow_default", "team_default"]
+          }
+        },
+        "required": [
+          "publisher",
+          "publisher_seq",
+          "team_id",
+          "executor_id",
+          "kind",
+          "occurred_at",
+          "task_id",
+          "attempt",
+          "claim_seq"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "finished"
+          }
+        },
+        "required": ["kind"]
+      },
+      "then": {
+        "properties": {
+          "publisher": true,
+          "publisher_seq": true,
+          "team_id": true,
+          "executor_id": true,
+          "kind": true,
+          "occurred_at": true,
+          "task_id": true,
+          "attempt": true,
+          "claim_seq": true
+        },
+        "required": [
+          "publisher",
+          "publisher_seq",
+          "team_id",
+          "executor_id",
+          "kind",
+          "occurred_at",
+          "task_id",
+          "attempt",
+          "claim_seq"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "failed"
+          }
+        },
+        "required": ["kind"]
+      },
+      "then": {
+        "properties": {
+          "publisher": true,
+          "publisher_seq": true,
+          "team_id": true,
+          "executor_id": true,
+          "kind": true,
+          "occurred_at": true,
+          "task_id": true,
+          "attempt": true,
+          "claim_seq": true,
+          "failure_reason": {
+            "type": "string",
+            "description": "Machine-readable failure reason. executor_k8s_openhands publishes: image_missing, invalid_flow_revision, missing_required_parameter, llm_configuration_incomplete (retryable false); image_pull_failed, pod_restarted_before_finish, pod_failed (task Pod in phase Failed, or exited without an OpenHands finished), agent_server_failed (OpenHands agent server unreachable or its stream failed), llm_budget_exceeded, openhands_<status> for failed, error, stuck or paused (retryable true).",
+            "pattern": "^[a-z][a-z0-9_]{0,127}$"
+          },
+          "retryable": {
+            "type": "boolean"
+          },
+          "openhands_error_code": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          }
+        },
+        "required": [
+          "publisher",
+          "publisher_seq",
+          "team_id",
+          "executor_id",
+          "kind",
+          "occurred_at",
+          "task_id",
+          "attempt",
+          "claim_seq",
+          "failure_reason",
+          "retryable"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "cancelled"
+          }
+        },
+        "required": ["kind"]
+      },
+      "then": {
+        "properties": {
+          "publisher": true,
+          "publisher_seq": true,
+          "team_id": true,
+          "executor_id": true,
+          "kind": true,
+          "occurred_at": true,
+          "task_id": true,
+          "attempt": true,
+          "claim_seq": true,
+          "control_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          }
+        },
+        "required": [
+          "publisher",
+          "publisher_seq",
+          "team_id",
+          "executor_id",
+          "kind",
+          "occurred_at",
+          "task_id",
+          "attempt",
+          "claim_seq",
+          "control_id"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "control_acknowledged"
+          }
+        },
+        "required": ["kind"]
+      },
+      "then": {
+        "properties": {
+          "publisher": true,
+          "publisher_seq": true,
+          "team_id": true,
+          "executor_id": true,
+          "kind": true,
+          "occurred_at": true,
+          "task_id": true,
+          "attempt": true,
+          "claim_seq": true,
+          "control_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "control": {
+            "const": "cancel"
+          }
+        },
+        "required": [
+          "publisher",
+          "publisher_seq",
+          "team_id",
+          "executor_id",
+          "kind",
+          "occurred_at",
+          "task_id",
+          "attempt",
+          "claim_seq",
+          "control_id",
+          "control"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "control_failed"
+          }
+        },
+        "required": ["kind"]
+      },
+      "then": {
+        "properties": {
+          "publisher": true,
+          "publisher_seq": true,
+          "team_id": true,
+          "executor_id": true,
+          "kind": true,
+          "occurred_at": true,
+          "task_id": true,
+          "attempt": true,
+          "claim_seq": true,
+          "control_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "control": {
+            "const": "cancel"
+          },
+          "reason": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]{0,127}$"
+          }
+        },
+        "required": [
+          "publisher",
+          "publisher_seq",
+          "team_id",
+          "executor_id",
+          "kind",
+          "occurred_at",
+          "task_id",
+          "attempt",
+          "claim_seq",
+          "control_id",
+          "control",
+          "reason"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "log"
+          }
+        },
+        "required": ["kind"]
+      },
+      "then": {
+        "properties": {
+          "publisher": true,
+          "publisher_seq": true,
+          "team_id": true,
+          "executor_id": true,
+          "kind": true,
+          "occurred_at": true,
+          "task_id": true,
+          "attempt": true,
+          "claim_seq": true,
+          "stream": {
+            "enum": ["reasoning", "work"]
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 65536
+          }
+        },
+        "required": [
+          "publisher",
+          "publisher_seq",
+          "team_id",
+          "executor_id",
+          "kind",
+          "occurred_at",
+          "task_id",
+          "attempt",
+          "claim_seq",
+          "stream",
+          "text"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "executor_started"
+          }
+        },
+        "required": ["kind"]
+      },
+      "then": {
+        "properties": {
+          "publisher": true,
+          "publisher_seq": true,
+          "team_id": true,
+          "executor_id": true,
+          "kind": true,
+          "occurred_at": true,
+          "executor_type": {
+            "const": "executor_k8s_openhands"
+          }
+        },
+        "required": [
+          "publisher",
+          "publisher_seq",
+          "team_id",
+          "executor_id",
+          "kind",
+          "occurred_at",
+          "executor_type"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "executor_stopping"
+          }
+        },
+        "required": ["kind"]
+      },
+      "then": {
+        "properties": {
+          "publisher": true,
+          "publisher_seq": true,
+          "team_id": true,
+          "executor_id": true,
+          "kind": true,
+          "occurred_at": true
+        },
+        "required": [
+          "publisher",
+          "publisher_seq",
+          "team_id",
+          "executor_id",
+          "kind",
+          "occurred_at"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "executor_stopped"
+          }
+        },
+        "required": ["kind"]
+      },
+      "then": {
+        "properties": {
+          "publisher": true,
+          "publisher_seq": true,
+          "team_id": true,
+          "executor_id": true,
+          "kind": true,
+          "occurred_at": true
+        },
+        "required": [
+          "publisher",
+          "publisher_seq",
+          "team_id",
+          "executor_id",
+          "kind",
+          "occurred_at"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "executor_failed"
+          }
+        },
+        "required": ["kind"]
+      },
+      "then": {
+        "properties": {
+          "publisher": true,
+          "publisher_seq": true,
+          "team_id": true,
+          "executor_id": true,
+          "kind": true,
+          "occurred_at": true,
+          "phase": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]{0,127}$"
+          }
+        },
+        "required": [
+          "publisher",
+          "publisher_seq",
+          "team_id",
+          "executor_id",
+          "kind",
+          "occurred_at",
+          "phase"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "executor_connection_lost"
+          }
+        },
+        "required": ["kind"]
+      },
+      "then": {
+        "properties": {
+          "publisher": true,
+          "publisher_seq": true,
+          "team_id": true,
+          "executor_id": true,
+          "kind": true,
+          "occurred_at": true,
+          "lost_at": {
+            "type": "string",
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}Z$"
+          }
+        },
+        "required": [
+          "publisher",
+          "publisher_seq",
+          "team_id",
+          "executor_id",
+          "kind",
+          "occurred_at",
+          "lost_at"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "executor_connection_restored"
+          }
+        },
+        "required": ["kind"]
+      },
+      "then": {
+        "properties": {
+          "publisher": true,
+          "publisher_seq": true,
+          "team_id": true,
+          "executor_id": true,
+          "kind": true,
+          "occurred_at": true,
+          "lost_at": {
+            "type": "string",
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}Z$"
+          },
+          "restored_at": {
+            "type": "string",
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}Z$"
+          }
+        },
+        "required": [
+          "publisher",
+          "publisher_seq",
+          "team_id",
+          "executor_id",
+          "kind",
+          "occurred_at",
+          "lost_at",
+          "restored_at"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "protocol_violation"
+          }
+        },
+        "required": ["kind"]
+      },
+      "then": {
+        "properties": {
+          "publisher": true,
+          "publisher_seq": true,
+          "team_id": true,
+          "executor_id": true,
+          "kind": true,
+          "occurred_at": true,
+          "reason": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]{0,127}$"
+          },
+          "subject": {
+            "type": "string",
+            "maxLength": 512
+          },
+          "message_publisher": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "message_publisher_seq": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          }
+        },
+        "required": [
+          "publisher",
+          "publisher_seq",
+          "team_id",
+          "executor_id",
+          "kind",
+          "occurred_at",
+          "reason"
+        ],
+        "additionalProperties": false
+      }
+    }
+  ]
+}

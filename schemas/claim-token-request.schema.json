@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://flowai.local/schemas/executor/claim-token-request.schema.json",
+  "title": "Claim-token request",
+  "description": "Request body (agents.md rule 9) an Executor sends on task-manager.executor.<executor_id>.claim-token.pub right after its created event is acknowledged by JetStream. created_publisher_seq is the publisher_seq of that created message; its publisher is the requesting Executor named by the subject. Header team = the Executor's team_id (ignored), request_id.",
+  "type": "object",
+  "properties": {
+    "params": {
+      "type": "object",
+      "maxProperties": 0
+    },
+    "body": {
+      "type": "object",
+      "properties": {
+        "task_id": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9223372036854775807
+        },
+        "attempt": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9223372036854775807
+        },
+        "claim_seq": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9223372036854775807
+        },
+        "created_publisher_seq": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9223372036854775807
+        }
+      },
+      "required": ["task_id", "attempt", "claim_seq", "created_publisher_seq"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["params", "body"],
+  "additionalProperties": false
+}
