@@ -1,0 +1,130 @@
+name: Qualify Kubernetes OpenHands Executor
+run-name: Qualify Kubernetes OpenHands Executor at ${{ inputs.expected_source_sha }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      expected_source_sha:
+        description: Full commit SHA of the selected Executor ref
+        type: string
+        required: true
+      env_registry_sha:
+        description: Full commit SHA of flowai-env-registry
+        type: string
+        required: true
+      executor_registry_sha:
+        description: Full commit SHA of flowai-executor-registry
+        type: string
+        required: true
+      model_registry_sha:
+        description: Full commit SHA of flowai-model-registry
+        type: string
+        required: true
+      task_manager_sha:
+        description: Full commit SHA of flowai-task-manager
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      EXPECTED_SOURCE_SHA: ${{ inputs.expected_source_sha }}
+      ENV_REGISTRY_SHA: ${{ inputs.env_registry_sha }}
+      EXECUTOR_REGISTRY_SHA: ${{ inputs.executor_registry_sha }}
+      MODEL_REGISTRY_SHA: ${{ inputs.model_registry_sha }}
+      TASK_MANAGER_SHA: ${{ inputs.task_manager_sha }}
+      GOTOOLCHAIN: local
+      GOWORK: 'off'
+    steps:
+      - name: Verify dispatch SHAs
+        shell: bash
+        run: |
+          for input in EXPECTED_SOURCE_SHA ENV_REGISTRY_SHA EXECUTOR_REGISTRY_SHA MODEL_REGISTRY_SHA TASK_MANAGER_SHA; do
+            if [[ ! "${!input}" =~ ^[0-9a-f]{40}$ ]]; then
+              echo "$input must be a 40-digit lowercase hexadecimal commit SHA." >&2
+              exit 1
+            fi
+            printf '%s=%s\n' "$input" "${!input}"
+          done
+          if [[ "$GITHUB_SHA" != "$EXPECTED_SOURCE_SHA" ]]; then
+            echo 'The dispatch ref does not resolve to expected_source_sha.' >&2
+            exit 1
+          fi
+
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Verify checkout and stage pinned publisher schemas
+        shell: bash
+        run: |
+          if [[ "$(git rev-parse HEAD)" != "$EXPECTED_SOURCE_SHA" ]]; then
+            echo 'The checkout does not match expected_source_sha.' >&2
+            exit 1
+          fi
+          if [[ ! -f go.mod || ! -s qualification/publisher-schemas.txt ]]; then
+            echo 'Dispatch on the reviewed standalone candidate branch.' >&2
+            exit 1
+          fi
+          contracts="$(mktemp -d "$RUNNER_TEMP/executor-k8s-contracts.XXXXXXXX")"
+          while read -r path pin digest; do
+            if [[ ! "$path" =~ ^svc/([a-z-]+)/schemas/[a-zA-Z0-9._-]+\.schema\.json$ ]]; then
+              echo "Invalid schema path: $path" >&2
+              exit 1
+            fi
+            publisher="${BASH_REMATCH[1]}"
+            case "$publisher" in
+              env-registry) sha="$ENV_REGISTRY_SHA" ;;
+              executor-registry) sha="$EXECUTOR_REGISTRY_SHA" ;;
+              model-registry) sha="$MODEL_REGISTRY_SHA" ;;
+              task-manager) sha="$TASK_MANAGER_SHA" ;;
+              *) exit 1 ;;
+            esac
+            if [[ "$sha" != "$pin" || ! "$digest" =~ ^[0-9a-f]{64}$ ]]; then
+              echo "Dispatch pin or manifest digest mismatch for $path." >&2
+              exit 1
+            fi
+            url="https://raw.githubusercontent.com/pandops/flowai-$publisher/$sha/${path#svc/"$publisher"/}"
+            mkdir -p "$contracts/${path%/*}"
+            status="$(curl -q --silent --show-error --fail --proto '=https' --max-time 30 \
+              --output "$contracts/$path" --write-out '%{http_code}' "$url")"
+            if [[ "$status" != 200 ]]; then
+              echo "Unexpected HTTP status $status for $url." >&2
+              exit 1
+            fi
+            printf '%s  %s\n' "$digest" "$contracts/$path" | sha256sum --check --status
+            python3 -c 'import json, sys; sys.exit(not isinstance(json.load(open(sys.argv[1])), dict))' "$contracts/$path"
+            printf '%s ' "$url"
+            (cd "$contracts" && sha256sum "$path")
+          done < qualification/publisher-schemas.txt
+          printf 'FLOWAI_CONTRACT_FIXTURE_DIR=%s\n' "$contracts" >> "$GITHUB_ENV"
+
+      - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
+        with:
+          go-version: '1.26.2'
+          cache: false
+
+      - name: Verify Go modules and run baseline-owned tests
+        shell: bash
+        run: |
+          go mod verify
+          go test -mod=readonly -count=1 -coverpkg=./... -v ./...
+          go test -mod=readonly -count=1 -tags=integration -v ./...
+
+      - name: Qualify Kubernetes packaging inputs offline
+        shell: bash
+        run: bash qualification/render.sh
+
+      - name: Build untagged Linux image
+        shell: bash
+        run: |
+          docker build --platform linux/amd64 -f Containerfile --iidfile "$RUNNER_TEMP/executor-k8s.iid" .
+          image="$(cat "$RUNNER_TEMP/executor-k8s.iid")"
+          docker image inspect --format '{{ .Id }} {{ .Config.User }} {{ json .Config.Entrypoint }} {{ json .Config.Cmd }}' "$image"
+          docker run --rm --network none "$image" --help
