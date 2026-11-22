@@ -1,4 +1,4 @@
-name: Qualify and publish executor-k8s-openhands
+name: Qualify and publish executor_k8s_openhands
 run-name: Qualify Kubernetes OpenHands Executor at ${{ inputs.expected_source_sha }}
 
 on:
