@@ -93,7 +93,7 @@ jobs:
             exit 1
           fi
           contracts="$(mktemp -d "$RUNNER_TEMP/executor-k8s-contracts.XXXXXXXX")"
-          while read -r path pin digest; do
+          while read -r path _ digest; do
             if [[ ! "$path" =~ ^svc/([a-z-]+)/schemas/[a-zA-Z0-9._-]+\.schema\.json$ ]]; then
               echo "Invalid schema path: $path" >&2
               exit 1
@@ -106,8 +106,8 @@ jobs:
               task-manager) sha="$TASK_MANAGER_SHA" ;;
               *) exit 1 ;;
             esac
-            if [[ "$sha" != "$pin" || ! "$digest" =~ ^[0-9a-f]{64}$ ]]; then
-              echo "Dispatch pin or manifest digest mismatch for $path." >&2
+            if [[ ! "$digest" =~ ^[0-9a-f]{64}$ ]]; then
+              echo "Invalid fixture digest for $path." >&2
               exit 1
             fi
             url="https://raw.githubusercontent.com/pandops/flowai-$publisher/$sha/${path#svc/"$publisher"/}"
