@@ -1,0 +1,3 @@
+# Synthetic render input. This string is not a JWT.
+broker:
+  token: standalone-render-fixture

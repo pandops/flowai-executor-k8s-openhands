@@ -1,0 +1,35 @@
+# Example configuration of executor_k8s_openhands. In a cluster the Helm
+# chart renders this file into a Secret and the install-config init
+# container copies it to /var/lib/flowai/executor-k8s/config/config.yaml
+# (mode 0600), where the Executor reads it on every start.
+broker:
+  url: tls://nats:4222
+  # The one-time Executor JWT from executor-registry. Its name claim pins
+  # team_id, executor_id, tag and executor_type.
+  token: "<executor JWT>"
+  ca_file: /run/flowai/stand-ca/ca.pem
+  request_timeout: 5s
+env_registry_url: http://env-registry:8080
+model_registry_url: http://model-registry:8080
+max_parallel_tasks: 2
+heartbeat_interval: 15s
+heartbeat_miss_limit: 3
+connection_wait: 600s
+pending_recheck_interval: 30s
+drain_timeout_seconds: 30
+poll_interval: 1s
+pod_poll_interval: 2s
+finished_cleanup_delay: 0s
+failed_cleanup_delay: 0s
+executor_api_bind: ":8080"
+log_level: info
+namespace: flowai-executor-k8s
+service_account: executor-k8s-openhands
+image_pull_policy: IfNotPresent
+litellm_data_pod_labels:
+  flowai.io/litellm-data: client
+cache_dir: /var/lib/flowai/executor-k8s/cache
+openhands_port: 8000
+openhands_workspace: /workspace/project
+openhands_llm_usage_id: flowai-executor
+openhands_initial_run: true

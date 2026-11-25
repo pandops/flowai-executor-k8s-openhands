@@ -1,0 +1,7 @@
+FROM gcr.io/distroless/static-debian12:nonroot@sha256:afa5c872c891853ca7fcf1f12c3edb23f7eeef36189728842dd51042ff57f7ab
+COPY --chmod=0555 app /executor_k8s_openhands
+COPY configs/executor_k8s_openhands.yaml /usr/share/flowai/config.example.yaml
+USER 65532:65532
+EXPOSE 8080
+ENTRYPOINT ["/executor_k8s_openhands"]
+CMD ["--config", "/var/lib/flowai/executor-k8s/config/config.yaml"]

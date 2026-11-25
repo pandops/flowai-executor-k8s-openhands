@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://flowai.local/schemas/executor/heartbeat-request.schema.json",
+  "title": "Executor heartbeat request",
+  "description": "Request body (agents.md rule 9) an Executor sends every interval_seconds on executor-registry.executor.<executor_id>.heartbeat.pub. wait_seconds is W. No claim token.",
+  "type": "object",
+  "properties": {
+    "params": {
+      "type": "object",
+      "maxProperties": 0
+    },
+    "body": {
+      "type": "object",
+      "properties": {
+        "executor_type": {
+          "const": "executor_k8s_openhands"
+        },
+        "interval_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 86400
+        },
+        "miss_limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "wait_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 604800
+        },
+        "max_parallel_tasks": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1024
+        },
+        "slots_in_use": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1024
+        },
+        "ip": {
+          "type": ["string", "null"],
+          "maxLength": 45,
+          "description": "Address of the primary (default-route) interface: IPv4 dotted quad or RFC 5952 IPv6, no prefix, port or zone; null when no default route or address."
+        },
+        "claims": {
+          "type": "array",
+          "maxItems": 1024,
+          "items": {
+            "type": "object",
+            "properties": {
+              "task_id": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9223372036854775807
+              },
+              "attempt": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9223372036854775807
+              },
+              "claim_seq": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9223372036854775807
+              },
+              "state": {
+                "enum": ["created", "pending", "running"]
+              }
+            },
+            "required": ["task_id", "attempt", "claim_seq", "state"],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "executor_type",
+        "interval_seconds",
+        "miss_limit",
+        "wait_seconds",
+        "max_parallel_tasks",
+        "slots_in_use",
+        "ip",
+        "claims"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": ["params", "body"],
+  "additionalProperties": false
+}

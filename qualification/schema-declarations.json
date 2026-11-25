@@ -1,0 +1,119 @@
+{
+  "schemas": {
+    "executor/k8s-openhands/schemas/check-request.schema.json": [
+      "executor_k8s_openhands",
+      "executor_docker_openhands",
+      "model-registry"
+    ],
+    "executor/k8s-openhands/schemas/claim-token-request.schema.json": [
+      "executor_k8s_openhands",
+      "executor_docker_openhands",
+      "task-manager"
+    ],
+    "executor/k8s-openhands/schemas/executor-event.schema.json": [
+      "executor_k8s_openhands",
+      "executor_docker_openhands",
+      "journal",
+      "model-registry",
+      "task-manager"
+    ],
+    "executor/k8s-openhands/schemas/heartbeat-request.schema.json": [
+      "executor_k8s_openhands",
+      "executor-registry",
+      "executor_docker_openhands"
+    ],
+    "svc/env-registry/schemas/error.reply.schema.json": [
+      "env-registry",
+      "api-gateway",
+      "executor_docker_openhands",
+      "executor_k8s_openhands"
+    ],
+    "svc/env-registry/schemas/executor.launch-parameters-open.reply.schema.json": [
+      "env-registry",
+      "executor_docker_openhands",
+      "executor_k8s_openhands"
+    ],
+    "svc/executor-registry/schemas/executor.heartbeat.reply.schema.json": [
+      "executor-registry",
+      "executor_docker_openhands",
+      "executor_k8s_openhands"
+    ],
+    "svc/executor-registry/schemas/executor.heartbeat.request.schema.json": [
+      "executor-registry",
+      "executor_docker_openhands",
+      "executor_k8s_openhands"
+    ],
+    "svc/model-registry/schemas/defs.schema.json": [
+      "model-registry",
+      "api-gateway",
+      "audit",
+      "executor_docker_openhands",
+      "executor_k8s_openhands",
+      "flow-registry",
+      "journal",
+      "task-manager"
+    ],
+    "svc/model-registry/schemas/edge.litellm-key.reply.schema.json": [
+      "model-registry",
+      "api-gateway",
+      "executor_docker_openhands",
+      "executor_k8s_openhands",
+      "flow-registry",
+      "journal",
+      "task-manager"
+    ],
+    "svc/model-registry/schemas/executor.check.reply.schema.json": [
+      "model-registry",
+      "executor_docker_openhands",
+      "executor_k8s_openhands"
+    ],
+    "svc/model-registry/schemas/executor.check.request.schema.json": [
+      "model-registry",
+      "executor_docker_openhands",
+      "executor_k8s_openhands"
+    ],
+    "svc/task-manager/schemas/command.schema.json": [
+      "task-manager",
+      "executor_docker_openhands",
+      "executor_k8s_openhands"
+    ],
+    "svc/task-manager/schemas/defs.schema.json": [
+      "task-manager",
+      "admin-panel",
+      "api-gateway",
+      "audit",
+      "env-registry",
+      "executor-registry",
+      "executor_docker_openhands",
+      "executor_k8s_openhands",
+      "journal",
+      "model-registry",
+      "source-controller"
+    ],
+    "svc/task-manager/schemas/error.reply.schema.json": [
+      "task-manager",
+      "admin-panel",
+      "api-gateway",
+      "env-registry",
+      "executor-registry",
+      "executor_docker_openhands",
+      "executor_k8s_openhands",
+      "model-registry"
+    ],
+    "svc/task-manager/schemas/executor.claim-token.reply.schema.json": [
+      "task-manager",
+      "executor_docker_openhands",
+      "executor_k8s_openhands"
+    ],
+    "svc/task-manager/schemas/executor.claim-token.request.schema.json": [
+      "task-manager",
+      "executor_docker_openhands",
+      "executor_k8s_openhands"
+    ],
+    "svc/task-manager/schemas/task.schema.json": [
+      "task-manager",
+      "executor_docker_openhands",
+      "executor_k8s_openhands"
+    ]
+  }
+}
